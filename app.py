@@ -2,7 +2,6 @@ import os
 # Use the package we installed
 from slack_bolt import App
 import config
-from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 app = App(
     token=config.SLACK_BOT_TOKEN,
