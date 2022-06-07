@@ -1,11 +1,13 @@
 import os
 # Use the package we installed
 from slack_bolt import App
+import config
+
 
 # Initializes your app with your bot token and signing secret
 app = App(
-    token=os.environ.get("SLACK_BOT_TOKEN"),
-    signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
+    token=config.SLACK_BOT_TOKEN,
+    signing_secret=config.SLACK_SIGNING_SECRET
 )
 
 # Add functionality here
@@ -55,7 +57,7 @@ def update_home_tab(client, event, logger):
         ]
       }
     )
-  
+
   except Exception as e:
     logger.error(f"Error publishing home tab: {e}")
 

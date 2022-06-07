@@ -1,0 +1,10 @@
+version: '3'
+services:
+  app:
+    restart: always
+    build: .
+    container_name: 'python3'
+    tty: true
+    volumes:
+      - .:/22_proken_python
+
