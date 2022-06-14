@@ -7,7 +7,7 @@ up: ## コンテナ立ち上げ
 	docker-compose up
 
 run: ## app.py走らせる
-	docker-compose run --rm app python3 app.py
+	docker-compose exec app python3 app.py
 
 build: ## Build or rebuild services.
 	docker-compose build

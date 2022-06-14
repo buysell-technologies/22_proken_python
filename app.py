@@ -2,11 +2,18 @@ import os
 # Use the package we installed
 from slack_bolt import App
 import config
+import psycopg2
+
+DATABASE_URL='postgresql://postgre:password@solve_db:5432/postgres'
 
 app = App(
     token=config.SLACK_BOT_TOKEN,
     signing_secret=config.SLACK_SIGNING_SECRET
 )
+
+def main():
+  cursor = psycopg2.connect(DATABASE_URL)
+  print(cursor)
 
 # 疑問を送る送るチャンネル
 channel_id = "C03FQHH6VGA"
@@ -299,3 +306,4 @@ def handle_view_events(ack, body, logger, client):
 
 if __name__ == "__main__":
   app.start(port=int(os.environ.get("PORT", 3000)))
+  # main()
