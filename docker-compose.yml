@@ -7,4 +7,11 @@ services:
     tty: true
     volumes:
       - .:/22_proken_python
+  db:
+    image: postgres
+    volumes:
+      - .:/22_proken_python
+    environment:
+      POSTGRES_USER: postgre
+      POSTGRES_PASSWORD: password
 
