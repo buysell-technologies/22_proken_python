@@ -4,7 +4,6 @@ services:
     restart: always
     container_name: solve_app
     build: .
-    container_name: 'python3'
     tty: true
     ports:
       - "3000:3000"
