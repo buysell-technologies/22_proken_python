@@ -16,7 +16,7 @@ def main():
   print(cursor)
 
 # 疑問を送る送るチャンネル
-channel_id = "C03FQHH6VGA"
+channel_id = "C03KE0P7U4D"
 
 # ****************************************************************
 # events
