@@ -6,6 +6,8 @@ services:
     build: .
     container_name: 'python3'
     tty: true
+    ports:
+      - "3000:3000"
     volumes:
       - .:/22_proken_python
   db:
