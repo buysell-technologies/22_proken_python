@@ -1,19 +1,27 @@
 import os
 # Use the package we installed
 from slack_bolt import App
+from slack_bolt.adapter.socket_mode import SocketModeHandler
 import config
 import psycopg2
 
-DATABASE_URL='postgresql://postgre:password@solve_db:5432/postgres'
+DATABASE_URL='postgresql://postgre:password@solve_db:5432/postgre'
 
 app = App(
     token=config.SLACK_BOT_TOKEN,
     signing_secret=config.SLACK_SIGNING_SECRET
 )
 
+connection = psycopg2.connect(DATABASE_URL)
+cur = connection.cursor()
+
 def main():
-  cursor = psycopg2.connect(DATABASE_URL)
-  print(cursor)
+  # connect()
+  # print(connect())
+  cur.execute('SELECT * FROM thread')
+  # data = abc().fetchall()
+  for item in cur:
+    print(item)
 
 # 疑問を送る送るチャンネル
 channel_id = "C03KE0P7U4D"
@@ -68,52 +76,56 @@ def update_home_tab(client, event, logger):
   except Exception as e:
     logger.error(f"Error publishing home tab: {e}")
 
+ # result = client.chat_postMessage(
+    #   channel=channel_id,
+    #   blocks=[
+    #     {
+    #       "type": "section",
+    #       "text": {
+    #         "type": "plain_text",
+    #         "text": "message",
+    #         "emoji": True
+    #       }
+    #     },
+    #     {
+    #       "type": "actions",
+    #       "elements": [
+    #         {
+    #           "type": "button",
+    #           "text": {
+    #             "type": "plain_text",
+    #             "text": "解決した",
+    #             "emoji": True
+    #           },
+    #           "value": "click_me_123",
+    #           "action_id": "open_done_modal"
+    #         },
+    #         {
+    #           "type": "button",
+    #           "text": {
+    #             "type": "plain_text",
+    #             "text": "返信する",
+    #             "emoji": True
+    #           },
+    #           "style": "primary",
+    #           "value": "click_me_123",
+    #           "action_id": "open_reply_modal"
+    #         }
+    #       ]
+    #     }
+    #   ]
+    # )
+
 # スレッドに返信があった場合にDMを送る
-@app.event("message")
-def send_dm(ack, body, client, logger):
+@app.message("")
+def send_dm(ack, body, client, logger, message, say):
+  say('aaaa')
   ack()
-
   print(body)
-
   try:
     result = client.chat_postMessage(
       channel=channel_id,
-      blocks=[
-        {
-          "type": "section",
-          "text": {
-            "type": "plain_text",
-            "text": "message",
-            "emoji": True
-          }
-        },
-        {
-          "type": "actions",
-          "elements": [
-            {
-              "type": "button",
-              "text": {
-                "type": "plain_text",
-                "text": "解決した",
-                "emoji": True
-              },
-              "value": "click_me_123",
-              "action_id": "open_done_modal"
-            },
-            {
-              "type": "button",
-              "text": {
-                "type": "plain_text",
-                "text": "返信する",
-                "emoji": True
-              },
-              "style": "primary",
-              "value": "click_me_123",
-              "action_id": "open_reply_modal"
-            }
-          ]
-        }
-      ]
+      text="mm"
     )
     logger.info(result)
 
@@ -130,7 +142,6 @@ def send_question(ack, body, client, logger):
   ack()
 
   message_block_id = body['view']['blocks'][0]['block_id']
-  # user = body['user']['id']
   message = body['view']['state']['values'][message_block_id]['plain_text_input-action']['value']
 
   try:
@@ -157,8 +168,18 @@ def send_question(ack, body, client, logger):
           }
         }
       ]
+
     )
     logger.info(result)
+    sender_id = result['message']['user']
+    thread_ts = result['ts']
+    sql = "INSERT INTO thread (user_id,thread_id,messages,token) VALUES('%s', '%s', '%s', null);" % (sender_id, thread_ts, message)
+    cur.execute(sql)
+    cur.execute('SELECT * FROM thread')
+    for item in cur:
+      print(item)
+
+    cur.commit()
 
   except Exception as e:
     logger.error(f"Error posting message: {e}")
@@ -305,5 +326,5 @@ def handle_view_events(ack, body, logger, client):
 
 
 if __name__ == "__main__":
-  app.start(port=int(os.environ.get("PORT", 3000)))
+  app.start(port=int(os.environ.get("PORT", 8080)))
   # main()
