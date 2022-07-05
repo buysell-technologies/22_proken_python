@@ -1,27 +1,26 @@
 import os
 # Use the package we installed
 from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
 import config
 import psycopg2
 
 DATABASE_URL='postgresql://postgre:password@solve_db:5432/postgre'
+
+connection = psycopg2.connect(DATABASE_URL)
+cur = connection.cursor()
 
 app = App(
     token=config.SLACK_BOT_TOKEN,
     signing_secret=config.SLACK_SIGNING_SECRET
 )
 
-connection = psycopg2.connect(DATABASE_URL)
-cur = connection.cursor()
-
-def main():
-  # connect()
-  # print(connect())
-  cur.execute('SELECT * FROM thread')
-  # data = abc().fetchall()
-  for item in cur:
-    print(item)
+# def main():
+#   # connect()
+#   # print(connect())
+#   cur.execute('SELECT * FROM thread')
+#   # data = abc().fetchall()
+#   for item in cur:
+#     print(item)
 
 # 疑問を送る送るチャンネル
 channel_id = "C03KE0P7U4D"
@@ -118,19 +117,77 @@ def update_home_tab(client, event, logger):
 
 # スレッドに返信があった場合にDMを送る
 @app.message("")
-def send_dm(ack, body, client, logger, message, say):
-  say('aaaa')
+def send_dm(ack, body, client, logger):
   ack()
-  print(body)
-  try:
-    result = client.chat_postMessage(
-      channel=channel_id,
-      text="mm"
-    )
-    logger.info(result)
 
-  except Exception as e:
-    logger.error(f"Error posting message: {e}")
+  # print(body)
+  sender_id = body['event']['user']
+  res = client.conversations_open(users= sender_id)
+  dm_id = res['channel']['id']
+  thread_ts = body['event']['thread_ts']
+  cur.execute("SELECT * FROM thread WHERE thread_id = '%s'" % (thread_ts))
+  getters = []
+  for item in cur:
+    getters.append(item)
+  # print(type(getters[0]))
+  getter_id = getters[0][1]
+  # cur.close()
+
+  thread_last_message = body['event']['blocks'][0]['elements'][0]['elements'][0]['text']
+  # getter = cur
+
+  if body['event']['thread_ts'] != None:
+    try:
+      result = client.chat_postMessage(
+        channel=dm_id,
+        blocks=[
+          {
+            "type": "section",
+            "text": {
+              "type": "plain_text",
+              "text": thread_last_message,
+              "emoji": True
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "解決した",
+                  "emoji": True
+                },
+                "value": "click_me_123",
+                "action_id": "open_done_modal"
+              },
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "返信する",
+                  "emoji": True
+                },
+                "style": "primary",
+                "value": "click_me_123",
+                "action_id": "open_reply_modal"
+              }
+            ]
+          }
+        ],
+        metadata={
+          "event_type": "dm",
+          "event_payload": {
+            "id": sender_id,
+            "title": thread_ts
+          }
+        }
+      )
+      logger.info(result)
+
+    except Exception as e:
+      logger.error(f"Error posting message: {e}")
 
 # ****************************************************************
 # actions
@@ -189,6 +246,13 @@ def send_question(ack, body, client, logger):
 def open_reply_modal(ack, body, client, logger):
   ack()
 
+  thread_ts = body['message']['metadata']['event_payload']['title']
+  thread = client.conversations_replies(
+            channel=channel_id,
+            ts=thread_ts
+          )
+  thread_first_ts = thread['messages'][0]['ts']
+
   try:
     result = client.views_open(
       trigger_id=body["trigger_id"],
@@ -225,6 +289,7 @@ def open_reply_modal(ack, body, client, logger):
             }
           }
         ],
+        "private_metadata": thread_first_ts,
       },
     )
     logger.info(result)
@@ -237,9 +302,17 @@ def open_reply_modal(ack, body, client, logger):
 def open_done_modal(ack, body, client, logger):
   ack()
 
+  trigger_id = body['trigger_id']
+  thread_ts = body['message']['metadata']['event_payload']['title']
+  thread = client.conversations_replies(
+            channel=channel_id,
+            ts=thread_ts
+          )
+  thread_first_ts = thread['messages'][0]['ts']
+
   try:
     result = client.views_open(
-      trigger_id=body["trigger_id"],
+      trigger_id=trigger_id,
       view={
         "type": "modal",
         "callback_id": "done_modal",
@@ -273,6 +346,7 @@ def open_done_modal(ack, body, client, logger):
             }
           }
         ],
+        "private_metadata": thread_first_ts,
       },
     )
     logger.info(result)
@@ -290,14 +364,20 @@ def handle_view_events(ack, body, logger, client):
   ack()
 
   print(body)
-
+  thread_ts = body['view']['private_metadata']
+  thread = client.conversations_replies(
+            channel=channel_id,
+            ts=thread_ts
+          )
+  thread_first_ts = thread['messages'][0]['ts']
   message_block_id = body['view']['blocks'][0]['block_id']
   message = body['view']['state']['values'][message_block_id]['plain_text_input-action']['value']
 
   try:
     result = client.chat_postMessage(
       channel=channel_id,
-      text=message
+      text=message,
+      thread_ts=thread_first_ts
     )
     logger.info(result)
 
@@ -326,5 +406,6 @@ def handle_view_events(ack, body, logger, client):
 
 
 if __name__ == "__main__":
-  app.start(port=int(os.environ.get("PORT", 8080)))
+  # SocketModeHandler(app, config.SLACK_BOT_TOKEN).start()
+  app.start(port=int(os.environ.get("PORT", 3000)))
   # main()

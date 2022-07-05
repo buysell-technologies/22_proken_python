@@ -6,7 +6,7 @@ services:
     build: .
     tty: true
     ports:
-      - "8080:3000"
+      - "3000:3000"
     volumes:
       - .:/22_proken_python
   db:
@@ -15,7 +15,7 @@ services:
     volumes:
       - .:/22_proken_python
     ports:
-      - "6000:5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgre
       POSTGRES_PASSWORD: password
