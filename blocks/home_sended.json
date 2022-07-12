@@ -1,0 +1,22 @@
+{
+  "type": "home",
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "疑問を投稿されました🎉🎉",
+        "emoji": true
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": " #z-tech-ソルブ チャンネルを見てみよう "
+        }
+      ]
+    }
+  ]
+}

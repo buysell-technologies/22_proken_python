@@ -1,0 +1,50 @@
+{
+  "type": "home",
+  "callback_id": "home_view",
+  "blocks": [
+    {
+      "dispatch_action": true,
+      "type": "input",
+      "element": {
+        "type": "plain_text_input",
+        "multiline": true,
+        "action_id": "plain_text_input-action"
+      },
+      "label": {
+        "type": "plain_text",
+        "text": "疑問を投稿しよう",
+        "emoji": true
+      }
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "投稿する",
+            "emoji": true
+          },
+          "style": "primary",
+          "value": "send_question",
+          "action_id": "send_question"
+        }
+      ]
+    },{
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "ファイルを選択する",
+            "emoji": true
+          },
+          "value": "send_question",
+          "action_id": "select_files"
+        }
+      ]
+    }
+  ]
+}
