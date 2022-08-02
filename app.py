@@ -22,6 +22,8 @@ def main():
   # data = abc().fetchall()
   for item in cur:
     print(item)
+def ack_within_3_seconds():
+  ack()
 
 # 疑問を送る送るチャンネル
 channel_id = "C03KE0P7U4D"
@@ -117,10 +119,12 @@ def update_home_tab(client, event, logger):
     # )
 
 # スレッドに返信があった場合にDMを送る
-@app.message("")
-def send_dm(ack, body, client, logger, message, say):
+@app.message("")(
+    ack=ack_within_3_seconds,
+    lazy=[send_dm],
+)
+def send_dm(body, client, logger, message, say):
   say('aaaa')
-  ack()
   print(body)
   try:
     result = client.chat_postMessage(
@@ -137,10 +141,11 @@ def send_dm(ack, body, client, logger, message, say):
 # ****************************************************************
 
 # 疑問を送る
-@app.action("send_question")
-def send_question(ack, body, client, logger):
-  ack()
-
+@app.action("send_question")(
+    ack=ack_within_3_seconds,
+    lazy=[send_question],
+)
+def send_question(body, client, logger):
   message_block_id = body['view']['blocks'][0]['block_id']
   message = body['view']['state']['values'][message_block_id]['plain_text_input-action']['value']
 
@@ -185,10 +190,11 @@ def send_question(ack, body, client, logger):
     logger.error(f"Error posting message: {e}")
 
 # 返信のモーダルを開く
-@app.action("open_reply_modal")
-def open_reply_modal(ack, body, client, logger):
-  ack()
-
+@app.action("open_reply_modal")(
+    ack=ack_within_3_seconds,
+    lazy=[open_reply_modal],
+)
+def open_reply_modal(body, client, logger):
   try:
     result = client.views_open(
       trigger_id=body["trigger_id"],
@@ -233,10 +239,11 @@ def open_reply_modal(ack, body, client, logger):
     logger.error("Error creating conversation: {}".format(e))
 
 # 完了のモーダルを開く
-@app.action("open_done_modal")
-def open_done_modal(ack, body, client, logger):
-  ack()
-
+@app.action("open_done_modal")(
+    ack=ack_within_3_seconds,
+    lazy=[open_done_modal],
+)
+def open_done_modal(body, client, logger):
   try:
     result = client.views_open(
       trigger_id=body["trigger_id"],
@@ -285,10 +292,11 @@ def open_done_modal(ack, body, client, logger):
 # ****************************************************************
 
 # 返信のモーダルから送信
-@app.view("reply_modal")
-def handle_view_events(ack, body, logger, client):
-  ack()
-
+@app.view("reply_modal")(
+    ack=ack_within_3_seconds,
+    lazy=[reply_modal],
+)
+def reply_modal(body, logger, client):
   print(body)
 
   message_block_id = body['view']['blocks'][0]['block_id']
@@ -305,10 +313,11 @@ def handle_view_events(ack, body, logger, client):
     logger.error(f"Error posting message: {e}")
 
 # 完了のモーダルから送信
-@app.view("done_modal")
-def handle_view_events(ack, body, logger, client):
-  ack()
-
+@app.view("done_modal")(
+    ack=ack_within_3_seconds,
+    lazy=[done_modal],
+)
+def done_modal(body, logger, client):
   print(body)
 
   message_block_id = body['view']['blocks'][0]['block_id']
